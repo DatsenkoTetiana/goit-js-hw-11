@@ -25,34 +25,27 @@ const options = {
 const observer = new IntersectionObserver(onLoad, options);
 refs.searchForm.addEventListener('submit', onSearch);
 
-function onSearch(event) {
-  event.preventDefault();
+function onSearch(e) {
+  e.preventDefault();
   page = 1;
   refs.gallery.innerHTML = '';
-  query = event.currentTarget.searchQuery.value.trim();
-
-  if (query === '') {
-    Notiflix.Notify.failure(
-      'The search string cannot be empty. Please specify your search query.'
-    );
-    return;
-  }
-
-  fetchImages(query, page, perPage)
-    .then(({ data }) => {
-      if (data.totalHits === 0) {
-        Notiflix.Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-      } else {
-        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-        renderGallery(data.hits);
-        simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-        observer.observe(refs.guard);
-      }
-    })
-    .catch(err => console.log(err));
+  query = e.currentTarget.searchQuery.value.trim();
 }
+
+fetchImages(query, page, perPage)
+  .then(({ data }) => {
+    if (data.totalHits === 0) {
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+    } else {
+      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+      renderGallery(data.hits);
+      simpleLightBox = new SimpleLightbox('.gallery a').refresh();
+      observer.observe(refs.guard);
+    }
+  })
+  .catch(err => console.log(err));
 
 function onLoad(entries, observer) {
   entries.forEach(entry => {
