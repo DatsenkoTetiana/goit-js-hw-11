@@ -1,65 +1,71 @@
 import './css/styles.css';
-import { fetchImg } from './js/fetchImg';
+import { fetchImages } from './js/fetchImg';
 import { renderGallery } from './js/renger-gallery';
-
-import { Notify } from 'notiflix';
+import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-let getEl = selector => document.querySelector(selector);
-const searchForm = getEl('#search-form');
-const btnLoad = getEl('.load-more');
-const quard = getEl('.quard');
-const galleryEl = getEl('.gallery');
+const refs = {
+  searchForm: document.querySelector('#search-form'),
+  gallery: document.querySelector('.gallery'),
+  guard: document.querySelector('.js-guard'),
+};
 
-let perPage = 40;
+let query = '';
 let page = 1;
-let SimpleLightbox;
-let q = '';
+const perPage = 40;
+let simpleLightBox;
 
 const options = {
   root: null,
-  rootMargin: '300px',
+  rootMargin: '200px',
   threshold: 1.0,
 };
 
-searchForm.addEventListener('submit', onSubmit);
 const observer = new IntersectionObserver(onLoad, options);
+refs.searchForm.addEventListener('submit', onSearch);
 
-async function onSubmit(e) {
-  e.prevenrDefault();
-  gallery.innerHTML = '';
+function onSearch(event) {
+  event.preventDefault();
   page = 1;
-  q = e.currentTarget.searchQuery.value.trim();
+  refs.gallery.innerHTML = '';
+  query = event.currentTarget.searchQuery.value.trim();
 
-  fetchImages(q, page, perPage)
+  if (query === '') {
+    Notiflix.Notify.failure(
+      'The search string cannot be empty. Please specify your search query.'
+    );
+    return;
+  }
+
+  fetchImages(query, page, perPage)
     .then(({ data }) => {
       if (data.totalHits === 0) {
-        Notify.failure(
+        Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
       } else {
-        Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
         renderGallery(data.hits);
         simpleLightBox = new SimpleLightbox('.gallery a').refresh();
         observer.observe(refs.guard);
       }
     })
-    .catch(error => console.log(error));
+    .catch(err => console.log(err));
 }
+
 function onLoad(entries, observer) {
   entries.forEach(entry => {
-    if (entry.isInterseting) {
+    if (entry.isIntersecting) {
       page += 1;
-      fetchImages(q, page, perPage).then(({ data }) => {
+      fetchImages(query, page, perPage).then(({ data }) => {
         renderGallery(data.hits);
         simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-
         if (data.page === data.totalHits) {
-          Notify.failure(
+          Notiflix.Notify.failure(
             "We're sorry, but you've reached the end of search results."
           );
-          observer.unobserve(quard);
+          observer.unobserve(refs.guard);
         }
       });
     }
