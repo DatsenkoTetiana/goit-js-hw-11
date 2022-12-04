@@ -30,22 +30,28 @@ function onSearch(e) {
   page = 1;
   refs.gallery.innerHTML = '';
   query = e.currentTarget.searchQuery.value.trim();
-}
+  if (query === '') {
+    Notiflix.Notify.failure(
+      'The search string cannot be empty. Please specify your search query.'
+    );
+    return;
+  }
 
-fetchImages(query, page, perPage)
-  .then(({ data }) => {
-    if (data.totalHits === 0) {
-      Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    } else {
-      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-      renderGallery(data.hits);
-      simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-      observer.observe(refs.guard);
-    }
-  })
-  .catch(err => console.log(err));
+  fetchImages(query, page, perPage)
+    .then(({ data }) => {
+      if (data.totalHits === 0) {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+      } else {
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        renderGallery(data.hits);
+        simpleLightBox = new SimpleLightbox('.gallery a').refresh();
+        observer.observe(refs.guard);
+      }
+    })
+    .catch(err => console.log(err));
+}
 
 function onLoad(entries, observer) {
   entries.forEach(entry => {
