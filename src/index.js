@@ -4,7 +4,6 @@ import { renderGallery } from './js/renger-gallery';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-
 const refs = {
   searchForm: document.querySelector('#search-form'),
   gallery: document.querySelector('.gallery'),
@@ -25,11 +24,12 @@ const options = {
 const observer = new IntersectionObserver(onLoad, options);
 refs.searchForm.addEventListener('submit', onSearch);
 
-function onSearch(e) {
-  e.preventDefault();
+function onSearch(event) {
+  event.preventDefault();
   page = 1;
   refs.gallery.innerHTML = '';
-  query = e.currentTarget.searchQuery.value.trim();
+  query = event.currentTarget.searchQuery.value.trim();
+
   if (query === '') {
     Notiflix.Notify.failure(
       'The search string cannot be empty. Please specify your search query.'
@@ -60,7 +60,7 @@ function onLoad(entries, observer) {
       fetchImages(query, page, perPage).then(({ data }) => {
         renderGallery(data.hits);
         simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-        if (data.page === data.totalHits) {
+        if (data.page >= data.totalHits) {
           Notiflix.Notify.failure(
             "We're sorry, but you've reached the end of search results."
           );
