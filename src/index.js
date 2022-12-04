@@ -4,40 +4,38 @@ import { renderGallery } from './js/renger-gallery';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-const refs = {
-  searchForm: document.querySelector('#search-form'),
-  gallery: document.querySelector('.gallery'),
-  guard: document.querySelector('.js-guard'),
-};
+const searchForm = document.querySelector('#search-form');
+const gallery = document.querySelector('.gallery');
+const guard = document.querySelector('.js-guard');
 
-let query = '';
+let q = '';
 let page = 1;
 const perPage = 40;
 let simpleLightBox;
 
 const options = {
   root: null,
-  rootMargin: '200px',
+  rootMargin: '250px',
   threshold: 1.0,
 };
 
 const observer = new IntersectionObserver(onLoad, options);
-refs.searchForm.addEventListener('submit', onSearch);
+searchForm.addEventListener('submit', onSearch);
 
-function onSearch(event) {
-  event.preventDefault();
+function onSearch(e) {
+  e.preventDefault();
   page = 1;
-  refs.gallery.innerHTML = '';
-  query = event.currentTarget.searchQuery.value.trim();
+  gallery.innerHTML = '';
+  q = e.currentTarget.searchQuery.value.trim();
 
-  if (query === '') {
+  if (q === '') {
     Notiflix.Notify.failure(
       'The search string cannot be empty. Please specify your search query.'
     );
     return;
   }
 
-  fetchImages(query, page, perPage)
+  fetchImages(q, page, perPage)
     .then(({ data }) => {
       if (data.totalHits === 0) {
         Notiflix.Notify.failure(
@@ -47,7 +45,7 @@ function onSearch(event) {
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
         renderGallery(data.hits);
         simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-        observer.observe(refs.guard);
+        observer.observe(guard);
       }
     })
     .catch(err => console.log(err));
@@ -57,16 +55,20 @@ function onLoad(entries, observer) {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
-      fetchImages(query, page, perPage).then(({ data }) => {
-        renderGallery(data.hits);
-        simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-        if (data.page >= data.totalHits) {
-          Notiflix.Notify.failure(
+      fetchImages(q, page, perPage)
+        .then(({ data }) => {
+          renderGallery(data.hits);
+          simpleLightBox = new SimpleLightbox('.gallery a').refresh();
+          if (data.page === data.totalHits) {
+            observer.unobserve(guard);
+          }
+        })
+        .catch(err => {
+          Notiflix.Notify.info(
             "We're sorry, but you've reached the end of search results."
           );
-          observer.unobserve(refs.guard);
-        }
-      });
+          observer.unobserve(guard);
+        });
     }
   });
   console.log(entries);
